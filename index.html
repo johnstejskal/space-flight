@@ -1,0 +1,426 @@
+
+<!-- Super hero city is an experiment learning project by John Stekjskal  (Twitter @johnstejskal)
+This experiment contains code from @MrDoobs procedural city example, which has been modified to suit the needs of this experiment -->
+
+<!-- www.johnstejskal.com -->
+
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<title>Super Hero City</title>
+
+		  <link rel="stylesheet" href="css/normalize.css">
+		  <link rel="stylesheet" href="css/main.css">
+	</head>
+	<body>
+        
+        <!---------------------------------------------> 
+        <!-- DOM based prelaoder -->
+        <!---------------------------------------------> 
+        <div id="preloader">
+            <div id="info_wrap">
+                <div id ="preloadBar"></div>
+                <div id="html5Badge"></div>
+                <div id="webgLogo"></div>
+                <div id="browsers">
+                    <div id="top"><p>recommended browsers</p></div>
+                    <div id="left"></div>
+                    <div id="right"></div>
+                </div>
+                
+            </div>
+        </div>
+        <!-- Preloader End -->
+
+
+        <!-- Audio tags for music -  Not supported on all browsers. but thats the way its gone be -->
+        <audio id="snd_MusicTrack1" src="sounds/Superman_Theme.mp3" preload="auto" loop></audio>
+        <audio id="snd_punch" src="sounds/punch.mp3" preload="auto"></audio>      
+	
+        <!-- Import THREE libs -->
+		<!--<script src="js/three.min.js"></script> -->
+		<script src="http://threejs.org/build/three.min.js"></script>
+		<script src="js/FirstPersonControls.js"></script>
+		<script src="js/FlyControls.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/THREEx.KeyboardState.js"></script>
+        
+        <!--<script src="js/THREEx.FullScreen.js"></script>-->
+        <!--<script src="js/THREEx.WindowResize.js"></script>-->
+
+        <!-- Import game object classes -->
+        <script src="js/Cockpit.js"></script>
+        <script src="js/Space.js"></script>
+
+        <script src="js/City.js"></script>
+        
+        <!-- Import 3rd party libs -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/1.11.3/TweenMax.min.js"></script>
+
+		<script>
+            //---------------------------------------o
+            //##Framework properties## Do not remove 
+            //---------------------------------------o
+         	//used to get delta time for animations
+            var clock;
+            var delta;
+			var scene, sceneOrtho,cameraOrtho, camera, renderer;
+			var light, controls;
+			var lastTime;            
+            var assetsToLoad = 0;
+            var assetsLoaded = 0;
+            
+            
+            //---------------------------------------o
+            //##Manditory game properties
+            //---------------------------------------o
+            var isGameInPlay = false;
+            var isMuted = false;
+            
+            
+            //---------------------------------------o
+            //##Keyboard controller
+            //---------------------------------------o 
+            var keyboard = new THREEx.KeyboardState();
+
+                var container;
+            //---------------------------------------o
+            //##Flight controller properties
+            //---------------------------------------o
+            var controls;
+			var maxSpeed = 1;
+            var acceleration = .15;
+			
+            
+            //------------------------------o
+            //-- Textures to load
+            //-- used by other components
+            //------------------------------o
+            var tex_cockpitBase;
+            var tex_mars;
+            var tex_jupiter;
+            var tex_stars;
+
+            var WIDTH = window.innerWidth
+            var HEIGHT = window.innerHeight
+            
+            var mouse = { x: 0, y: 0 }
+            //-------------------------------o
+            //--- object classes
+            //-------------------------------o
+            var oCockPit;
+            var oSpace;
+        
+            $(document).ready(function () {
+                console.log("All scripts ready");
+                preloadImageAssets();
+            });
+
+
+
+            //-----------------------------------------------0
+            //--start preload of all required assets
+            //-----------------------------------------------0
+            function preloadImageAssets()
+            {
+                 tex_cockpitBase = THREE.ImageUtils.loadTexture( 'images/cockpit1.png' );
+                 tex_mars = THREE.ImageUtils.loadTexture( 'images/mars.jpg' );
+                 tex_jupiter = THREE.ImageUtils.loadTexture( 'images/jupiter_1024x512.jpg' );
+                 tex_stars = THREE.ImageUtils.loadTexture( 'images/stars.jpg' );
+                //set quality of the texture when it is viewed on a perspective (not essential)
+			    //tex_cockpitBase.anisotropy = renderer.getMaxAnisotropy();  
+                 assetsToLoad = 4;
+                
+                //set callbacks
+                 tex_cockpitBase.onload = onLoaded();
+                 tex_mars.onload = onLoaded();
+                 tex_jupiter.onload = onLoaded();
+                 tex_stars.onload = onLoaded();
+                
+            }
+            
+            //-----------------------------------------------0
+            //-- loader callback
+            //-----------------------------------------------0
+            function onLoaded()
+            {
+                assetsLoaded++;
+
+                var perc = (assetsLoaded / assetsToLoad) * 1;
+                perc = perc * 75;
+              
+                TweenLite.to(document.getElementById('preloadBar'), .1, {width:perc}); 
+                
+                if(assetsToLoad == assetsLoaded){
+                console.log("onLoaded: all assets loaded");
+                    
+               tex_cockpitBase.wrapS = tex_cockpitBase.wrapT = THREE.RepeatWrapping;
+               tex_cockpitBase.repeat.x = 1;  
+                    
+                setTimeout(init, 2000); //give a little delay as there is a GPU lag which causes frame drop
+                }
+                
+            }
+            
+            
+            //-------------------------------------------------o
+            // Init the game
+            //-----------------------------------------------0
+			function init() 
+            {
+                console.log("init()");
+               
+                if ( Detector.webgl )
+                {
+                document.getElementById('preloader').remove();
+                //canvas layer visible = true
+                }
+                
+                
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+                
+                clock = new THREE.Clock();
+
+
+                //-----------------------------o
+                //-- create a renderer (webGL or Canvas)
+                //-----------------------------o  
+				renderer = new THREE.WebGLRenderer( { antialias: false, alpha: true } );
+				//renderer = new THREE.CanvasRenderer( { antialias: false, alpha: false } );
+				//renderer.setClearColor( 0xffffff );
+				//renderer.setClearColor( 0xd8e7ff );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				//scene = new THREE.Scene();
+				//scene.fog = new THREE.Fog( 0x000000, 1500, 2100 );
+                
+               // sceneOrtho = new THREE.Scene(); //scene for the HUD
+                
+			///	var width = window.innerWidth;
+				//var height = window.innerHeight;
+                
+                
+                //-----------------------------o
+                //-- Add the camera to the scene
+				camera = new THREE.PerspectiveCamera( 40, WIDTH / HEIGHT, 1, 10000 );
+				camera.position.z = 400;
+                
+                //-----------------------------o
+                //-- Add an orphographic camera to the scene to render HUD
+                //-----------------------------o  
+				cameraOrtho = new THREE.OrthographicCamera( - WIDTH / 2, WIDTH / 2, HEIGHT / 2, - HEIGHT / 2, 1, 50 );
+				cameraOrtho.position.z = 50;
+
+				scene = new THREE.Scene();
+				//scene.fog = new THREE.Fog( 0x000000, 1500, 2100 );
+
+				sceneOrtho = new THREE.Scene();                
+
+
+                
+                
+                //-----------------------------o
+                //-- Add Flying  controller
+                //-----------------------------o                    
+				controls = new THREE.FlyControls( camera );
+				controls.movementSpeed = 100;
+				//controls.domElement = container;
+				controls.rollSpeed = Math.PI / 24;
+				controls.autoForward = false;
+				controls.dragToLook = false;
+                
+
+                //-----------------------------o
+                //-- Add a light to the scene
+                //-----------------------------o
+				light = new THREE.HemisphereLight( 0xfffff0, 0x101020, 1.25 );
+				//light = new THREE.HemisphereLight( 0x0000000, 0x000000, 1.25 );
+				light.position.set( 0.75, 1, 0.25 );
+				scene.add( light );
+
+
+
+                //Use performance.now when available to get more accurate current time for movement
+				lastTime = performance.now();
+				
+
+        
+                //--------------------------------o
+                // Create player
+                //--------------------------------o
+                oCockPit = new Cockpit();
+               // oCockPit.x = 0;
+               // oCockPit.y = 0;
+                //scene.add(oCockPit);
+                
+ 
+                //--------------------------------o
+                // Create Space
+                //--------------------------------o
+                oSpace = new Space();
+
+             
+                
+                
+            // add a directional light source
+            var directionalLight = new THREE.DirectionalLight(0xffffff);
+            directionalLight.position.set(3, 1,3).normalize();
+            scene.add(directionalLight); 
+                
+                
+                
+              isGameInPlay = true;
+            animate();  
+                
+     
+            //------------------------------o
+            // some window events, jquery used for simplicity
+            //-------------------------------o
+             $(function() {
+                $(window).focus(function() {
+                    on_windowMouseOver();
+                });
+            
+                $(window).blur(function() {
+                on_windowMouseOut()
+                });
+            });
+                
+            $(window).resize(function() {
+                console.log("resezing()");
+                onWindowResize();
+            })
+                        
+            $('body').mouseleave(function() {
+                
+                on_windowMouseOut();
+            })
+            $('body').mouseenter(function() {
+               
+                on_windowMouseOver();
+            })   
+                
+
+                
+            }
+            
+            function on_windowMouseOut()
+            {
+              console.log("onMouse leave");
+               controls.freeze = true; 
+                stopSound()
+            }
+            function on_windowMouseOver()
+            {
+               controls.freeze = false; 
+               startSound()
+            }            
+            
+            function stopSound()
+            {
+                //document.getElementById('audiotag1').volume = 0;
+                // $('#mute').css("background-position", "right")
+            }
+            function startSound()
+            {
+                if(isMuted)
+                 return;
+                
+                //document.getElementById('audiotag1').volume = 0.3;
+                // $('#mute').css("background-position", "left")
+            }
+            
+			//---------------------------------o
+			// render loop 
+			//--------------------------------o
+			function animate() {
+                
+            requestAnimationFrame( animate );
+                
+                render();
+						
+			}
+            
+            function render()
+            {
+			   delta = clock.getDelta(); 
+             
+
+				var time = performance.now() / 1000;
+                //var time = Date.now() / 1000;
+               
+				//controls.update( time - lastTime );
+   				//controls.movementSpeed = 0.33 * d;
+				controls.update( delta );             
+                
+                //RENDER UI FIRST
+				//renderer.clearDepth();
+                 renderer.autoClear = false;
+                renderer.clear();
+                renderer.render( scene, camera );
+                renderer.render( sceneOrtho, cameraOrtho );
+              
+				
+
+                 lastTime = time;   
+
+                oSpace.update();
+                
+				             
+            }
+            
+
+
+             //-----------------------------------------------0
+             //--Window resize event handler------------------0
+             //-----------------------------------------------0
+            function onWindowResize(){
+            
+                return;
+                
+                console.log("onResize Event");
+               // camera.aspect = window.innerWidth / window.innerHeight;
+                //camera.updateProjectionMatrix();
+            
+                //renderer.setSize( window.innerWidth, window.innerHeight );
+                oCockPit.onResize();
+            
+                
+	
+				WIDTH = window.innerWidth;
+				HEIGHT = window.innerHeight;
+
+				camera.aspect = width / height;				
+				camera.updateProjectionMatrix();
+
+				cameraOrtho.left = - WIDTH / 2;
+				cameraOrtho.right = WIDTH / 2;
+				cameraOrtho.top = HEIGHTt / 2;
+				cameraOrtho.bottom = - HEIGHTt / 2;
+				cameraOrtho.updateProjectionMatrix();
+
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			
+                
+                
+            }
+            //-----------------------------------o
+            //-------- Game Won
+            //-----------------------------------o               
+            function gameWon()
+            {
+                console.log("game won!");
+               // isGameInPlay = false;
+            }            
+            
+
+		</script>
+
+
+        
+        
+</body></html>

@@ -1,0 +1,352 @@
+
+<!-- Super hero city is an experiment learning project by John Stekjskal  (Twitter @johnstejskal)
+This experiment contains code from @MrDoobs procedural city example, which has been modified to suit the needs of this experiment -->
+
+<!-- www.johnstejskal.com -->
+
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<title>Super Hero City</title>
+
+		  <link rel="stylesheet" href="css/normalize.css">
+		  <link rel="stylesheet" href="css/main.css">
+	</head>
+	<body>
+        
+
+        <!---------------------------------------------> 
+        <!-- DOM based prelaoder -->
+        <!---------------------------------------------> 
+        <div id="preloader">
+            <div id="info_wrap">
+                <div id ="preloadBar"></div>
+                <div id="html5Badge"></div>
+                <div id="webgLogo"></div>
+                <div id="browsers">
+                    <div id="top"><p>recommended browsers</p></div>
+                    <div id="left"></div>
+                    <div id="right"></div>
+                </div>
+                
+            </div>
+        </div>
+        <!-- Preloader End -->
+	
+        <!-- Import THREE libs -->
+		<!--<script src="js/three.min.js"></script> -->
+		<script src="http://threejs.org/build/three.min.js"></script>
+		<script src="js/FirstPersonControls.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/THREEx.KeyboardState.js"></script>
+        
+        <!--<script src="js/THREEx.FullScreen.js"></script>-->
+        <!--<script src="js/THREEx.WindowResize.js"></script>-->
+
+        <!-- Import game object classes -->
+        <script src="js/Cockpit.js"></script>
+        <script src="js/Space.js"></script>
+        <script src="js/City.js"></script>
+        
+        <!-- Import 3rd party libs -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/1.11.3/TweenMax.min.js"></script>
+
+<script>
+
+            var WIDTH = window.innerWidth;
+            var HEIGHT = window.innerHeight;
+			var camera, scene, renderer;
+			var cameraOrtho, sceneOrtho;
+            var assetsToLoad = 0;
+            var assetsLoaded = 0;
+			var spriteTL, spriteTR, spriteBL, spriteBR, spriteC;
+
+			var mapC;
+
+			var group;
+            var oCockpit
+			//init();
+			
+
+            var tex_cockpitBase, tex_mars, tex_stars;
+    
+    
+            preloadImageAssets();
+            //-----------------------------------------------0
+            //--start preload of all required assets
+            //-----------------------------------------------0
+            function preloadImageAssets()
+            {
+                 tex_cockpitBase = THREE.ImageUtils.loadTexture( 'images/cockpit1.png' );
+                
+                 tex_mars = THREE.ImageUtils.loadTexture( 'images/html5.png' );
+                 tex_stars = THREE.ImageUtils.loadTexture( 'images/html5.png' );
+                //set quality of the texture when it is viewed on a perspective (not essential)
+			   // tex_cockpitBase.anisotropy = renderer.getMaxAnisotropy();  
+                 assetsToLoad = 3;
+                
+                //set callbacks
+                 tex_cockpitBase.onload = onLoaded();
+                 tex_mars.onload = onLoaded();
+                 tex_stars.onload = onLoaded();
+                
+            }
+            
+            //-----------------------------------------------0
+            //-- loader callback
+            //-----------------------------------------------0
+            function onLoaded()
+            {
+                assetsLoaded++;
+
+                var perc = (assetsLoaded / assetsToLoad) * 1;
+                perc = perc * 75;
+              
+                TweenLite.to(document.getElementById('preloadBar'), .1, {width:perc}); 
+                
+                
+                
+                
+                
+                if(assetsToLoad == assetsLoaded){
+                    
+                tex_cockpitBase.wrapS = tex_cockpitBase.wrapT = THREE.RepeatWrapping;
+               tex_cockpitBase.repeat.x = 1;
+              // tex_cockpitBase.repeat.y = 1;       
+                    
+                console.log("onLoaded: all assets loaded");
+                setTimeout(init, 2000); //give a little delay as there is a GPU lag which causes frame drop
+                }
+                
+            }    
+    
+    
+    
+			function init() {
+
+                
+                console.log(this+"init");
+                
+                
+                
+                
+                
+                if ( Detector.webgl )
+                {
+                document.getElementById('preloader').remove();
+                //canvas layer visible = true
+                }              
+                
+                
+                
+               
+                
+
+                
+                
+                
+				var width = window.innerWidth;
+				var height = window.innerHeight;
+
+				camera = new THREE.PerspectiveCamera( 60, width / height, 1, 2100 );
+				camera.position.z = 1500;
+
+				cameraOrtho = new THREE.OrthographicCamera( - width / 2, width / 2, height / 2, - height / 2, 1, 50 );
+				cameraOrtho.position.z = 50;
+
+				scene = new THREE.Scene();
+				scene.fog = new THREE.Fog( 0x000000, 1500, 2100 );
+
+				sceneOrtho = new THREE.Scene();
+
+                
+                //sceneOrtho.add(cameraOrtho);
+                //scene.add(camera);
+				// create sprites
+
+				var amount = 200;
+				var radius = 500;
+
+				//var mapA = THREE.ImageUtils.loadTexture( "images/html5.png", undefined, createHUDSprites );
+				//var mapB = THREE.ImageUtils.loadTexture( "images/html5.png" );
+				//mapC = THREE.ImageUtils.loadTexture( "images/html5.png" );
+
+				group = new THREE.Object3D();
+
+				var materialC = new THREE.SpriteMaterial( { map: tex_cockpitBase, color: 0xffffff, fog: true } );
+				var materialB = new THREE.SpriteMaterial( { map: tex_cockpitBase, color: 0xffffff, fog: true } );
+
+				for ( var a = 0; a < amount; a ++ ) {
+
+					var x = Math.random() - 0.5;
+					var y = Math.random() - 0.5;
+					var z = Math.random() - 0.5;
+
+					if ( z < 0 ) {
+
+						material = materialB.clone();
+
+					} else {
+
+						material = materialC.clone();
+						material.color.setHSL( 0.5 * Math.random(), 0.75, 0.5 );
+						material.map.offset.set( -0.5, -0.5 );
+						material.map.repeat.set( 2, 2 );
+
+					}
+
+					var sprite = new THREE.Sprite( material );
+
+					sprite.position.set( x, y, z );
+					sprite.position.normalize();
+					sprite.position.multiplyScalar( radius );
+
+					group.add( sprite );
+
+				}
+
+				//scene.add( group );
+
+				// renderer
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.autoClear = false; // To allow render overlay on top of sprited sphere
+				
+				document.body.appendChild( renderer.domElement );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+                animate();
+                createHUDSprites();
+                
+                oCockpit = new Cockpit();
+                
+			}
+
+			function createHUDSprites (  ) {
+
+                return;
+				var material = new THREE.SpriteMaterial( { map: tex_cockpitBase } );
+                spriteC = new THREE.Sprite( material );
+				var width = material.map.image.width;
+				var height = material.map.image.height;
+				
+				spriteTL = new THREE.Sprite( material );
+				spriteTL.scale.set( width, height, 1 );
+				sceneOrtho.add( spriteTL );
+
+				spriteTR = new THREE.Sprite( material );
+				spriteTR.scale.set( width, height, 1 );
+				sceneOrtho.add( spriteTR );
+
+				spriteBL = new THREE.Sprite( material );
+				spriteBL.scale.set( width, height, 1 );
+				sceneOrtho.add( spriteBL );
+
+				spriteBR = new THREE.Sprite( material );
+				spriteBR.scale.set( width, height, 1 );
+				sceneOrtho.add( spriteBR );
+				
+				spriteC = new THREE.Sprite( material );
+				spriteC.scale.set( width, height, 1 );
+				sceneOrtho.add( spriteC );
+
+				//updateHUDSprites();
+
+			};
+
+			function updateHUDSprites () {
+
+				var width = window.innerWidth / 2;
+				var height = window.innerHeight / 2;
+
+				var material = spriteTL.material;
+
+				var imageWidth = material.map.image.width / 2;
+				var imageHeight = material.map.image.height / 2;
+
+				spriteTL.position.set( - width + imageWidth,   height - imageHeight, 1 ); // top left
+				spriteTR.position.set(   width - imageWidth,   height - imageHeight, 1 ); // top right
+				spriteBL.position.set( - width + imageWidth, - height + imageHeight, 1 ); // bottom left
+				spriteBR.position.set(   width - imageWidth, - height + imageHeight, 1 ); // bottom right
+				spriteC.position.set( 0, 0, 1 ); // center
+
+			};
+
+			function onWindowResize() {
+
+				var width = window.innerWidth;
+				var height = window.innerHeight;
+
+				camera.aspect = width / height;				
+				camera.updateProjectionMatrix();
+
+				cameraOrtho.left = - width / 2;
+				cameraOrtho.right = width / 2;
+				cameraOrtho.top = height / 2;
+				cameraOrtho.bottom = - height / 2;
+				cameraOrtho.updateProjectionMatrix();
+
+				updateHUDSprites();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+			function render() {
+
+				var time = Date.now() / 1000;
+
+				for ( var i = 0, l = group.children.length; i < l; i ++ ) {
+
+					var sprite = group.children[ i ];
+					var material = sprite.material;
+					var scale = Math.sin( time + sprite.position.x * 0.01 ) * 0.3 + 1.0;
+
+					var imageWidth = 1;
+					var imageHeight = 1;
+
+					if ( material.map && material.map.image && material.map.image.width ) {
+
+						imageWidth = material.map.image.width;
+						imageHeight = material.map.image.height;
+
+					}
+
+					sprite.material.rotation += 0.1 * ( i / l );
+					sprite.scale.set( scale * imageWidth, scale * imageHeight, 1.0 );
+
+					if ( material.map !== mapC ) {
+
+						material.opacity = Math.sin( time + sprite.position.x * 0.01 ) * 0.4 + 0.6;
+
+					}
+
+				}
+
+				group.rotation.x = time * 0.5;
+				group.rotation.y = time * 0.75;
+				group.rotation.z = time * 1.0;
+
+				renderer.clear();
+				renderer.render( scene, camera );
+				renderer.clearDepth();
+				renderer.render( sceneOrtho, cameraOrtho );
+
+			}
+
+		</script>
+
+
+        
+        
+</body></html>
