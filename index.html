@@ -46,8 +46,9 @@ This experiment contains code from @MrDoobs procedural city example, which has b
         <!-- Import game object classes -->
         <script src="js/Cockpit.js"></script>
         <script src="js/Space.js"></script>
-
         <script src="js/City.js"></script>
+        
+        <script src="js/util/Maths.js"></script>
         
         <!-- Import 3rd party libs -->
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -112,7 +113,7 @@ This experiment contains code from @MrDoobs procedural city example, which has b
             var oCockPit;
             var oSpace;
         
-            
+            var Maths = new Maths();
             var arrDust = new Array();
             
             $(document).ready(function () {
@@ -361,11 +362,11 @@ This experiment contains code from @MrDoobs procedural city example, which has b
         function addSpaceDust()
         {
           
-        var material = new THREE.SpriteMaterial( { map: tex_spaceDust, useScreenCoordinates: false } );
+        var material = new THREE.SpriteMaterial( { map: tex_spaceDust, useScreenCoordinates: false} );
 
             
             
-                for ( var j = 0; j < 1000; j ++ ) 
+                for ( var j = 0; j < 4000; j ++ ) 
                 {
                     var spDust = new THREE.Sprite( material );
                     //spDust.position.set( -100, 50, 0 );
@@ -376,9 +377,13 @@ This experiment contains code from @MrDoobs procedural city example, which has b
                    // spDust.scale.y = .5;
                    // spDust.scale.z = .3;
 
-                    spDust.position.x = Math.floor( Math.random() * 400 - 100 ) * 9;
-                    spDust.position.z = Math.floor( Math.random() * 400 - 100 ) * 9;
-                    spDust.position.y = Math.floor((Math.random() * 500) - 250);  
+                   // spDust.position.x = Math.floor( Math.random() * 400 - 100 ) * 9;
+                  //  spDust.position.z = Math.floor( Math.random() * 400 - 100 ) * 9;
+                   //// spDust.position.y = Math.floor((Math.random() * 500) - 250);  
+                 
+                    spDust.position.x = Maths.randomInt(-4000, 4000)
+                    spDust.position.z = Maths.randomInt(-4000, 4000)
+                    spDust.position.y = Maths.randomInt(-100, 100)
                     scene.add(spDust);
                     arrDust.push(spDust);
                 }
@@ -506,7 +511,8 @@ This experiment contains code from @MrDoobs procedural city example, which has b
 
                 oSpace.update();
                 
-				             
+				 //  console.log("camera z:"+camera.position.z);       
+				 //  console.log("camera x:"+camera.position.x);       
             }
             
 

@@ -79,7 +79,7 @@ function Space()
    // scene.add(this.sun);          
         
     //Add a sky box with stars
-   var geometry = new THREE.CubeGeometry(5000,5000,5000);
+   var geometry = new THREE.CubeGeometry(10000,10000,10000);
    tex_stars.wrapS = THREE.RepeatWrapping;
    tex_stars.wrapT = THREE.RepeatWrapping;
    tex_stars.repeat.x = 5;
@@ -102,11 +102,11 @@ function Space()
          this.skyBox.position.y = camera.position.y;
          this.skyBox.position.z = camera.position.z;
         
-        console.log("dusty length :"+arrDust.length);
+       // console.log("dusty length :"+arrDust.length);
         for(var i = 0; i < 999; i++)
         {
              var dust = arrDust[i];
-            dust.position.z -= 0.5;
+            dust.position.z -= 0.05;
         }
     }    
         

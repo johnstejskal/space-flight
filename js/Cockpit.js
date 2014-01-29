@@ -56,7 +56,7 @@ sceneOrtho.add(bg);
     this.cockpitSprite.scale.set(WIDTH, cockpitMarerial.map.image.height, 1);
    // this.cockpitSprite.position.normalize();
  //   this.cockpitSprite.position.z = 1;
-    this.cockpitSprite.position.set(0, 0, 10 );
+    this.cockpitSprite.position.set(0, 0, 1 );
     emptySprite.add(  this.cockpitSprite );  
     
     
