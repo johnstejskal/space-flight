@@ -18,6 +18,7 @@ function Space()
   this.mars;
   this.jupiter;
   this.sun;
+  this.skyBox;
 
 
     this.init();
@@ -63,7 +64,7 @@ function Space()
     this.jupiter.position.y = 180;
     this.jupiter.position.z = -1000;   
     this.jupiter.rotation.z = 25;   
-    scene.add(this.jupiter);       
+   // scene.add(this.jupiter);       
         
         
           
@@ -75,7 +76,7 @@ function Space()
     this.sun.position.y = 180;
     this.sun.position.z = -1000;   
     this.sun.rotation.z = 25;   
-    scene.add(this.sun);          
+   // scene.add(this.sun);          
         
     //Add a sky box with stars
    var geometry = new THREE.CubeGeometry(5000,5000,5000);
@@ -85,8 +86,8 @@ function Space()
    tex_stars.repeat.y = 5;    
    var material2 = new THREE.MeshBasicMaterial( { map: tex_stars } );
    material2.side = THREE.DoubleSide;
-   var skyBox = new THREE.Mesh( geometry, material2 );
-   scene.add( skyBox ); 
+   this.skyBox = new THREE.Mesh( geometry, material2 );
+   scene.add( this.skyBox ); 
         
         
     
@@ -95,8 +96,18 @@ function Space()
     
     Space.prototype.update = function()
     {
-        this.jupiter.rotation.y += .001;    
+      //  this.jupiter.rotation.y += .001;    
         this.mars.rotation.y += .001;    
+        this.skyBox.position.x = camera.position.x;
+         this.skyBox.position.y = camera.position.y;
+         this.skyBox.position.z = camera.position.z;
+        
+        console.log("dusty length :"+arrDust.length);
+        for(var i = 0; i < 999; i++)
+        {
+             var dust = arrDust[i];
+            dust.position.z -= 0.5;
+        }
     }    
         
     
