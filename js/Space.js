@@ -50,9 +50,9 @@ function Space()
     var mars_material = new THREE.MeshLambertMaterial({map:tex_mars})
     this.mars = new THREE.Mesh(new THREE.SphereGeometry(200, 50, 50), mars_material);
     this.mars.overdraw = true;
-    this.mars.position.z = 1500;
+    this.mars.position.x = 7000;
     this.mars.position.y = 500;
-    this.mars.rotation.z = 0;
+    this.mars.position.z = 0;
     scene.add(this.mars);  
      
         
@@ -87,7 +87,7 @@ function Space()
    var material2 = new THREE.MeshBasicMaterial( { map: tex_stars } );
    material2.side = THREE.DoubleSide;
    this.skyBox = new THREE.Mesh( geometry, material2 );
-   scene.add( this.skyBox ); 
+   //scene.add( this.skyBox ); 
         
         
     

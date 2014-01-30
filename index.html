@@ -270,9 +270,9 @@ This experiment contains code from @MrDoobs procedural city example, which has b
 				textureFlare2 = THREE.ImageUtils.loadTexture( "images/lensflare2.png" );
 				textureFlare3 = THREE.ImageUtils.loadTexture( "images/lensflare3.png" );
 
-				addLight( 0.55, 30.9, 0.5, 5000, 0, -1000 );
-                addLight( 0.08, 3.8, 0.5,    0, 0, -1000 );
-				addLight( 0.995, 3.5, 0.9, 5000, 5000, -1000 );
+				//addLight( 0.55, 30.9, 0.5, 5000, 0, -1000 );
+                //addLight( 0.08, 3.8, 0.5,    0, 0, -1000 );
+				//addLight( 0.995, 3.5, 0.9, 5000, 5000, -1000 );
                 
   				//addLight( 0.55, 30.9, 10.5, 5000, 0, -1000 );
                // addLight( 0.08, 3.8, 0.5,    0, 0, -1000 );
@@ -283,10 +283,9 @@ This experiment contains code from @MrDoobs procedural city example, which has b
                 //-----------------------------o
                 //-- Add a light to the scene
                 //-----------------------------o
-				light = new THREE.HemisphereLight( 0xfffff0, 0x101020, 1.25 );
-				//light = new THREE.HemisphereLight( 0x0000000, 0x000000, 1.25 );
-				light.position.set( 0.75, 1, 0.25 );
-				scene.add( light );
+				//light = new THREE.HemisphereLight( 0xfffff0, 0x101020, 1.25 );
+				//light.position.set( 0.75, 1, 0.25 );
+				//scene.add( light );
 
 
 
@@ -392,7 +391,7 @@ This experiment contains code from @MrDoobs procedural city example, which has b
         }
             function addLight( h, s, l, x, y, z )
             {
-
+                    return;
 					var light = new THREE.PointLight( 0xffffff, 1.5, 4500 );
 					light.color.setHSL( h, s, l );
 					light.position.set( x, y, z );
